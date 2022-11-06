@@ -19,13 +19,13 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
-	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "layout-parts.gohtml"))
+	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
 	router.Get("/", controllers.StaticHandler(homeTemplate))
 
-	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "layout-parts.gohtml"))
+	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
 	router.Get("/contact", controllers.StaticHandler(contactTemplate))
 
-	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "layout-parts.gohtml"))
+	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
 	router.Get("/faq", controllers.FAQ(faqTemplate))
 
 	router.NotFound(http.HandlerFunc(notFoundHandler))

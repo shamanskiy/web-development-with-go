@@ -25,6 +25,10 @@ func FAQ(template views.Template) http.HandlerFunc {
 			Question: "Can you teach me?",
 			Answer:   "Yes",
 		},
+		{
+			Question: "What else can I do?",
+			Answer:   "Whatever you want",
+		},
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
