@@ -1,11 +1,10 @@
 <h1>FAQ</h1>
 	<ul>
-	<li>
-	  <b>Wow, you wrote this yourself?</b>
-	  Yes!
-	</li>
-	<li>
-	  <b>Can you teach me?</b>
-	  Yes
-	</li>
+	{{range .}}
+        {{template "qa" .}}
+    {{end}}
   </ul>
+
+{{define "qa"}}
+<li><b>{{.Question}}</b> {{.Answer}}</li>
+{{end}}
