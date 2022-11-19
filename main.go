@@ -28,8 +28,11 @@ func main() {
 	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
 	router.Get("/faq", controllers.FAQ(faqTemplate))
 
+	signUpTemplate := views.Must(views.ParseFS(templates.FS, "signup.gohtml", "tailwind.gohtml"))
+	router.Get("/signup", controllers.StaticHandler(signUpTemplate))
+
 	router.NotFound(http.HandlerFunc(notFoundHandler))
 
 	fmt.Println("Starting a server on :3000")
-	http.ListenAndServe(":3000", router)
+	http.ListenAndServe("localhost:3000", router)
 }

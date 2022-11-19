@@ -9,7 +9,7 @@
 </head>
 
 <!-- Flex and flex-col + mainDiv with mb-auto helps push footer down -->
-<body class="flex flex-col h-screen">
+<body class="flex flex-col min-h-screen bg-gray-100">
 
  <header class="bg-gradient-to-r from-blue-800 to-indigo-800 text-white">
     <nav class="px-8 py-6 flex items-center space-x-12">
@@ -21,7 +21,7 @@
       </div>
       <div class="space-x-4">
         <a href="#">Sign in</a>
-        <a class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded" href="#">Sign up</a>
+        <a class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded" href="/signup">Sign up</a>
       </div>
     </nav>
   </header>
@@ -34,7 +34,7 @@
 {{define "footer"}}
   </div>
 
-  <footer class="bg-black text-white font-sans font-light text-sm">
+  <footer class="bg-gray-200 text-gray-800 font-sans font-normal text-sm">
     <div class="grid place-items-center py-6">
       <p><a href="https://github.com/Shamanskiy" class="hover:underline">Created by Alexander Shamanskiy</a></p>  
     </div>
