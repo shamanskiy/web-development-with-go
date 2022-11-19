@@ -7,7 +7,9 @@
   <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
   rel="stylesheet">
 </head>
-<body>
+
+<!-- Flex and flex-col + mainDiv with mb-auto helps push footer down -->
+<body class="flex flex-col h-screen">
 
  <header class="bg-gradient-to-r from-blue-800 to-indigo-800 text-white">
     <nav class="px-8 py-6 flex items-center space-x-12">
@@ -23,11 +25,21 @@
       </div>
     </nav>
   </header>
-{{end}}
+
+  <div class="mb-auto">
+  {{end}}
 
 <!-- Each page's content goes here. -->
 
 {{define "footer"}}
+  </div>
+
+  <footer class="bg-black text-white font-sans font-light text-sm">
+    <div class="grid place-items-center py-6">
+      <p><a href="https://github.com/Shamanskiy" class="hover:underline">Created by Alexander Shamanskiy</a></p>  
+    </div>
+  </footer>
+
 </body>
 </html>
 {{end}}
