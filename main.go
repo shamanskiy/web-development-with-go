@@ -28,6 +28,7 @@ func main() {
 	usersController.Templates.New = views.Must(views.ParseFS(templates.FS,
 		"signup.gohtml", "tailwind.gohtml"))
 	router.Get("/signup", usersController.NewHandler)
+	router.Post("/signup", usersController.CreateHandler)
 
 	router.NotFound(controllers.NotFound)
 
