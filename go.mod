@@ -1,4 +1,4 @@
-module guthub.com/Shamanskiy/lenslocked
+module github.com/Shamanskiy/lenslocked
 
 go 1.18
 
