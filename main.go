@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Shamanskiy/lenslocked/controllers"
+	"github.com/Shamanskiy/lenslocked/models"
 	"github.com/Shamanskiy/lenslocked/templates"
 	"github.com/Shamanskiy/lenslocked/views"
 	"github.com/go-chi/chi/middleware"
@@ -24,7 +25,20 @@ func main() {
 	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
 	router.Get("/faq", controllers.FAQ(faqTemplate))
 
-	var usersController controllers.Users
+	cfg := models.DefaultPostgresConfig()
+	db, err := models.Open(cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	userService := models.UserService{
+		DB: db,
+	}
+
+	usersController := controllers.Users{
+		UserService: &userService,
+	}
 	usersController.Templates.New = views.Must(views.ParseFS(templates.FS,
 		"signup.gohtml", "tailwind.gohtml"))
 	router.Get("/signup", usersController.NewHandler)
