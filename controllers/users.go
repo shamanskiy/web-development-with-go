@@ -63,5 +63,23 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie := http.Cookie{
+		Name:     "email",
+		Value:    user.Email,
+		Path:     "/",
+		HttpOnly: true}
+	http.SetCookie(w, &cookie)
+
 	fmt.Fprintf(w, "User authenticated: %+v", user)
+}
+
+func (u Users) CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
+	email, err := r.Cookie("email")
+	if err != nil {
+		fmt.Fprintf(w, "Couldn't find email cookie.")
+		return
+	}
+	fmt.Fprintf(w, "Email cookie: %s\n", email.Value)
+
+	fmt.Fprintf(w, "Headers: %+v", r.Header)
 }
