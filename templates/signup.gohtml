@@ -5,6 +5,9 @@
         Start sharing your photos today!
     </h1>
     <form method="post" action="/signup">
+      <div class="hidden">
+        {{csrfField}}
+      </div>
       <div>
         <label for="email" class="text-sm font-semibold text-gray-800">
             Email Address

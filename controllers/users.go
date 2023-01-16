@@ -20,7 +20,7 @@ func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		Email string
 	}
 	data.Email = r.FormValue("email")
-	u.Templates.SignUp.Execute(w, data)
+	u.Templates.SignUp.Execute(w, r, data)
 }
 
 func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		Email string
 	}
 	data.Email = r.FormValue("email")
-	u.Templates.SignIn.Execute(w, data)
+	u.Templates.SignIn.Execute(w, r, data)
 }
 
 func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
