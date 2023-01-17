@@ -76,7 +76,8 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 func (u Users) CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 	email, err := r.Cookie("email")
 	if err != nil {
-		fmt.Fprintf(w, "Couldn't find email cookie.")
+		fmt.Println("Cookie not found in request. Redirecting to sign in page.")
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 	fmt.Fprintf(w, "Email cookie: %s\n", email.Value)
