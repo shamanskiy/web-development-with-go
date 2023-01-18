@@ -5,17 +5,19 @@ import (
 	"net/http"
 
 	"github.com/Shamanskiy/lenslocked/controllers"
+	"github.com/Shamanskiy/lenslocked/middleware"
 	"github.com/Shamanskiy/lenslocked/models"
 	"github.com/Shamanskiy/lenslocked/templates"
 	"github.com/Shamanskiy/lenslocked/views"
-	"github.com/go-chi/chi/middleware"
+	chi_middleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/csrf"
 )
 
 func main() {
 	router := chi.NewRouter()
-	router.Use(middleware.Logger)
+
+	// time request execution
+	router.Use(chi_middleware.Logger, middleware.CSRF)
 
 	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
 	router.Get("/", controllers.Static(homeTemplate))
@@ -51,12 +53,6 @@ func main() {
 	router.Get("/app/me", usersController.CurrentUserHandler)
 	router.NotFound(controllers.NotFound)
 
-	csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
-	csrfMw := csrf.Protect(
-		[]byte(csrfKey),
-		// TODO: Fix this before deploying
-		csrf.Secure(false),
-	)
 	fmt.Println("Starting a server on :3000")
-	http.ListenAndServe("localhost:3000", csrfMw(router))
+	http.ListenAndServe("localhost:3000", router)
 }
