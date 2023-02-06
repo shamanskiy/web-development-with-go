@@ -25,6 +25,7 @@ docker compose stop
 To stop and kill Postgres image use
 
 ```
+DON'T USE IT UNLESS YOU HAVE TO!
 docker compose down
 ```
 

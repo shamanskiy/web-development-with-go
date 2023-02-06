@@ -39,8 +39,13 @@ func main() {
 		DB: db,
 	}
 
+	sessionService := models.SessionService{
+		DB: db,
+	}
+
 	usersController := controllers.Users{
-		UserService: &userService,
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 	usersController.Templates.SignUp = views.Must(views.ParseFS(templates.FS,
 		"signup.gohtml", "tailwind.gohtml"))
@@ -50,7 +55,8 @@ func main() {
 	router.Post("/signup", usersController.CreateUserHandler)
 	router.Get("/signin", usersController.SignInHandler)
 	router.Post("/signin", usersController.AuthenticateUserHandler)
-	router.Get("/app/me", usersController.CurrentUserHandler)
+	router.Get("/users/me", usersController.CurrentUserHandler)
+	router.Post("/signout", usersController.SignOutHandler)
 	router.NotFound(controllers.NotFound)
 
 	fmt.Println("Starting a server on :3000")
