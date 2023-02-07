@@ -9,6 +9,7 @@ import (
 
 type Users struct {
 	Templates struct {
+		Home   Template
 		SignUp Template
 		SignIn Template
 	}
@@ -47,7 +48,7 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	setCookie(w, CookieSession, session.Token)
 
-	http.Redirect(w, r, "/users/me", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,10 +82,10 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	setCookie(w, CookieSession, session.Token)
 
-	http.Redirect(w, r, "/users/me", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (u Users) CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
+func (u Users) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	tokenCookie, err := readCookie(r, CookieSession)
 	if err != nil {
 		fmt.Println(err)
@@ -98,7 +99,12 @@ func (u Users) CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
-	fmt.Fprintf(w, "Current user: %s\n", user.Email)
+
+	var data struct {
+		Email string
+	}
+	data.Email = user.Email
+	u.Templates.Home.Execute(w, r, data)
 }
 
 func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {

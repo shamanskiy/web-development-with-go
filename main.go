@@ -16,17 +16,7 @@ import (
 func main() {
 	router := chi.NewRouter()
 
-	// time request execution
 	router.Use(chi_middleware.Logger, middleware.CSRF)
-
-	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
-	router.Get("/", controllers.Static(homeTemplate))
-
-	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
-	router.Get("/contact", controllers.Static(contactTemplate))
-
-	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
-	router.Get("/faq", controllers.FAQ(faqTemplate))
 
 	cfg := models.DefaultPostgresConfig()
 	db, err := models.Open(cfg)
@@ -47,16 +37,25 @@ func main() {
 		UserService:    &userService,
 		SessionService: &sessionService,
 	}
+	usersController.Templates.Home = views.Must(views.ParseFS(templates.FS,
+		"home.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignUp = views.Must(views.ParseFS(templates.FS,
 		"signup.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignIn = views.Must(views.ParseFS(templates.FS,
 		"signin.gohtml", "tailwind.gohtml"))
+	router.Get("/", usersController.HomeHandler)
 	router.Get("/signup", usersController.SignUpHandler)
 	router.Post("/signup", usersController.CreateUserHandler)
 	router.Get("/signin", usersController.SignInHandler)
 	router.Post("/signin", usersController.AuthenticateUserHandler)
-	router.Get("/users/me", usersController.CurrentUserHandler)
 	router.Post("/signout", usersController.SignOutHandler)
+
+	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
+	router.Get("/contact", controllers.Static(contactTemplate))
+
+	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
+	router.Get("/faq", controllers.FAQ(faqTemplate))
+
 	router.NotFound(controllers.NotFound)
 
 	fmt.Println("Starting a server on :3000")
