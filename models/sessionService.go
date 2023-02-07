@@ -1,17 +1,8 @@
 package models
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
-
-	"github.com/Shamanskiy/lenslocked/rand"
-)
-
-const (
-	// The minimum number of bytes to be used for each session token.
-	MinBytesPerToken = 32
 )
 
 type Session struct {
@@ -25,20 +16,12 @@ type Session struct {
 }
 
 type SessionService struct {
-	DB *sql.DB
-	// BytesPerToken is used to determine how many bytes to use when generating
-	// each session token. If this value is not set or is less than the
-	// MinBytesPerToken const it will be ignored and MinBytesPerToken will be
-	// used.
-	BytesPerToken int
+	DB           *sql.DB
+	TokenManager TokenManager
 }
 
 func (ss *SessionService) Create(userID int) (*Session, error) {
-	bytesPerToken := ss.BytesPerToken
-	if bytesPerToken < MinBytesPerToken {
-		bytesPerToken = MinBytesPerToken
-	}
-	token, err := rand.String(bytesPerToken)
+	token, err := ss.TokenManager.New()
 	if err != nil {
 		return nil, fmt.Errorf("create: %w", err)
 	}
@@ -46,7 +29,7 @@ func (ss *SessionService) Create(userID int) (*Session, error) {
 	session := Session{
 		UserID:    userID,
 		Token:     token,
-		TokenHash: ss.hash(token),
+		TokenHash: ss.TokenManager.Hash(token),
 	}
 
 	row := ss.DB.QueryRow(`
@@ -76,7 +59,7 @@ func (ss *SessionService) Create(userID int) (*Session, error) {
 }
 
 func (ss *SessionService) User(token string) (*User, error) {
-	tokenHash := ss.hash(token)
+	tokenHash := ss.TokenManager.Hash(token)
 	var user User
 	row := ss.DB.QueryRow(`
 		SELECT user_id
@@ -99,7 +82,7 @@ func (ss *SessionService) User(token string) (*User, error) {
 }
 
 func (ss *SessionService) Delete(token string) error {
-	tokenHash := ss.hash(token)
+	tokenHash := ss.TokenManager.Hash(token)
 	_, err := ss.DB.Exec(`
 		DELETE FROM sessions
 		WHERE token_hash = $1;`, tokenHash)
@@ -107,10 +90,4 @@ func (ss *SessionService) Delete(token string) error {
 		return fmt.Errorf("delete: %w", err)
 	}
 	return nil
-}
-
-func (ss *SessionService) hash(token string) string {
-	tokenHash := sha256.Sum256([]byte(token))
-	// base64 encode the data into a string
-	return base64.URLEncoding.EncodeToString(tokenHash[:])
 }
