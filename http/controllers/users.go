@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Shamanskiy/lenslocked/http/context"
+	"github.com/Shamanskiy/lenslocked/http/cookie"
 	"github.com/Shamanskiy/lenslocked/models"
 )
 
@@ -46,7 +48,7 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
-	setCookie(w, CookieSession, session.Token)
+	cookie.Set(w, cookie.CookieSession, session.Token)
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -80,22 +82,14 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
-	setCookie(w, CookieSession, session.Token)
+	cookie.Set(w, cookie.CookieSession, session.Token)
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (u Users) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	tokenCookie, err := readCookie(r, CookieSession)
-	if err != nil {
-		fmt.Println(err)
-		http.Redirect(w, r, "/signin", http.StatusFound)
-		return
-	}
-
-	user, err := u.SessionService.User(tokenCookie)
-	if err != nil {
-		fmt.Println(err)
+	user := context.User(r.Context())
+	if user == nil {
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
@@ -108,7 +102,7 @@ func (u Users) HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
-	token, err := readCookie(r, CookieSession)
+	token, err := cookie.Read(r, cookie.CookieSession)
 	if err != nil {
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
@@ -121,6 +115,6 @@ func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleteCookie(w, CookieSession)
+	cookie.Delete(w, cookie.CookieSession)
 	http.Redirect(w, r, "/signin", http.StatusFound)
 }

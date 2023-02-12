@@ -4,20 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Shamanskiy/lenslocked/controllers"
-	"github.com/Shamanskiy/lenslocked/middleware"
+	"github.com/Shamanskiy/lenslocked/http/controllers"
+	"github.com/Shamanskiy/lenslocked/http/middleware"
 	"github.com/Shamanskiy/lenslocked/migrations"
 	"github.com/Shamanskiy/lenslocked/models"
 	"github.com/Shamanskiy/lenslocked/templates"
 	"github.com/Shamanskiy/lenslocked/views"
-	chi_middleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	router := chi.NewRouter()
-
-	router.Use(chi_middleware.Logger, middleware.CSRF)
 
 	cfg := models.DefaultPostgresConfig()
 	db, err := models.Open(cfg)
@@ -38,6 +35,12 @@ func main() {
 	sessionService := models.SessionService{
 		DB: db,
 	}
+
+	userMiddleware := middleware.UserMiddleware{
+		SessionService: &sessionService,
+	}
+
+	router.Use(middleware.Logger, middleware.CSRF, userMiddleware.SetUser)
 
 	usersController := controllers.Users{
 		UserService:    &userService,
