@@ -46,13 +46,18 @@ func main() {
 		UserService:    &userService,
 		SessionService: &sessionService,
 	}
-	usersController.Templates.Home = views.Must(views.ParseFS(templates.FS,
-		"home.gohtml", "tailwind.gohtml"))
+	usersController.Templates.CurrentUser = views.Must(views.ParseFS(templates.FS,
+		"currentuser.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignUp = views.Must(views.ParseFS(templates.FS,
 		"signup.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignIn = views.Must(views.ParseFS(templates.FS,
 		"signin.gohtml", "tailwind.gohtml"))
-	router.Get("/", usersController.HomeHandler)
+
+	router.Route("/users/me", func(r chi.Router) {
+		r.Use(userMiddleware.RequireUser)
+		r.Get("/", usersController.CurrentUserHandler)
+	})
+
 	router.Get("/signup", usersController.SignUpHandler)
 	router.Post("/signup", usersController.CreateUserHandler)
 	router.Get("/signin", usersController.SignInHandler)
@@ -64,6 +69,9 @@ func main() {
 
 	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
 	router.Get("/faq", controllers.FAQ(faqTemplate))
+
+	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
+	router.Get("/", controllers.Static(homeTemplate))
 
 	router.NotFound(controllers.NotFound)
 

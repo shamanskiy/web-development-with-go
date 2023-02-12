@@ -11,9 +11,9 @@ import (
 
 type Users struct {
 	Templates struct {
-		Home   Template
-		SignUp Template
-		SignIn Template
+		CurrentUser Template
+		SignUp      Template
+		SignIn      Template
 	}
 	UserService    *models.UserService
 	SessionService *models.SessionService
@@ -50,7 +50,7 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cookie.Set(w, cookie.CookieSession, session.Token)
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
 func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,21 +84,19 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cookie.Set(w, cookie.CookieSession, session.Token)
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
-func (u Users) HomeHandler(w http.ResponseWriter, r *http.Request) {
+// This handler expects to sit behind userMiddleware.RequireUser,
+// so it doesn't check if the user exists
+func (u Users) CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := context.User(r.Context())
-	if user == nil {
-		http.Redirect(w, r, "/signin", http.StatusFound)
-		return
-	}
 
 	var data struct {
 		Email string
 	}
 	data.Email = user.Email
-	u.Templates.Home.Execute(w, r, data)
+	u.Templates.CurrentUser.Execute(w, r, data)
 }
 
 func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
