@@ -34,3 +34,15 @@ To connect to DB with pgsl CLI in Docker:
 ```
 docker exec -it web-development-with-go-db-1 /usr/bin/psql -U baloo -d lenslocked
 ```
+
+To run goose migration (up/down/status/reset)
+
+```
+goose postgres \
+"host=localhost port=5432 user=baloo password=junglebook dbname=lenslocked sslmode=disable" \
+status
+```
+
+```
+goose fix
+```

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Shamanskiy/lenslocked/controllers"
 	"github.com/Shamanskiy/lenslocked/middleware"
+	"github.com/Shamanskiy/lenslocked/migrations"
 	"github.com/Shamanskiy/lenslocked/models"
 	"github.com/Shamanskiy/lenslocked/templates"
 	"github.com/Shamanskiy/lenslocked/views"
@@ -24,6 +25,11 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+
+	err = models.MigrateFS(db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
 
 	userService := models.UserService{
 		DB: db,
