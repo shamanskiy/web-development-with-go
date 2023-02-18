@@ -46,3 +46,6 @@ status
 ```
 goose fix
 ```
+
+Fill in .env.template file using your credentials from https://mailtrap.io
+and put .env in the project root.
