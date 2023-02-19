@@ -23,6 +23,7 @@ type Users struct {
 	SessionService       *models.SessionService
 	PasswordResetService *models.PasswordResetService
 	EmailService         *models.EmailService
+	ServerAddress        string
 }
 
 func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +151,8 @@ func (u Users) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Reques
 		"token": {pwReset.Token},
 	}
 	// TODO: Make the URL here configurable
-	err = u.EmailService.ForgotPassword(data.Email, "https://www.lenslocked.com/reset-pw?"+vals.Encode())
+	err = u.EmailService.ForgotPassword(data.Email,
+		"http://"+u.ServerAddress+"/reset-pw?"+vals.Encode())
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)

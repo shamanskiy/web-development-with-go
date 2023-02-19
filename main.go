@@ -62,6 +62,7 @@ func main() {
 		SessionService:       sessionService,
 		PasswordResetService: pwResetService,
 		EmailService:         emailService,
+		ServerAddress:        cfg.Server.Address,
 	}
 	usersController.Templates.CurrentUser = views.Must(views.ParseFS(templates.FS,
 		"currentuser.gohtml", "tailwind.gohtml"))
@@ -143,7 +144,7 @@ func loadEnvConfig() (config, error) {
 	cfg.CSRF.Secure = false
 
 	// TODO: Read the server values from an ENV variable
-	cfg.Server.Address = ":3000"
+	cfg.Server.Address = "localhost:3000"
 
 	return cfg, nil
 }
