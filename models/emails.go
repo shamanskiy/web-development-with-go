@@ -28,11 +28,11 @@ type SMTPConfig struct {
 	Password string
 }
 
-func NewEmailService(config SMTPConfig) (*EmailService, error) {
+func NewEmailService(config SMTPConfig) *EmailService {
 	es := EmailService{
 		dialer: mail.NewDialer(config.Host, config.Port, config.Username, config.Password),
 	}
-	return &es, nil
+	return &es
 }
 
 type Email struct {
