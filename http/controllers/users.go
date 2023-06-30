@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/Shamanskiy/lenslocked/errors"
 	"github.com/Shamanskiy/lenslocked/http/context"
 	"github.com/Shamanskiy/lenslocked/http/cookie"
 	"github.com/Shamanskiy/lenslocked/models"
@@ -47,6 +48,9 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	user, err := u.UserService.Create(email, password)
 	if err != nil {
+		if errors.Is(err, models.ErrEmailTaken) {
+			err = errors.Public(err, "That email address is already associated with an account.")
+		}
 		data := SignUpData{
 			Email: email,
 		}

@@ -2,6 +2,7 @@ package views
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -18,6 +19,10 @@ type Template struct {
 	htmlTemplate *template.Template
 }
 
+type public interface {
+	Public() string
+}
+
 func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}, errs ...error) {
 	// cloning template to avoid race condition
 	// when handling multiple user requests
@@ -28,6 +33,7 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 		return
 	}
 
+	errorMessages := parseErrors(errs)
 	clonedTemplate = clonedTemplate.Funcs(template.FuncMap{
 		"csrfField": func() template.HTML {
 			return csrf.TemplateField(r)
@@ -36,15 +42,12 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 			return context.User(r.Context())
 		},
 		"errors": func() []string {
-			var errorMessages []string
-			for _, err := range errs {
-				errorMessages = append(errorMessages, err.Error())
-			}
 			return errorMessages
 		},
 	})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	// buffering template execution to avoid sending partial HTML on error
 	var buf bytes.Buffer
 	err = clonedTemplate.Execute(&buf, data)
@@ -84,4 +87,18 @@ func Must(t Template, err error) Template {
 		panic(err)
 	}
 	return t
+}
+
+func parseErrors(errs []error) []string {
+	var errorMessages []string
+	for _, err := range errs {
+		var publicErr public
+		if errors.As(err, &publicErr) {
+			errorMessages = append(errorMessages, publicErr.Public())
+		} else {
+			fmt.Println(err)
+			errorMessages = append(errorMessages, "Something went wrong.")
+		}
+	}
+	return errorMessages
 }

@@ -65,7 +65,7 @@ func main() {
 		ServerAddress:        cfg.Server.Address,
 	}
 	usersController.Templates.CurrentUser = views.Must(views.ParseFS(templates.FS,
-		"currentuser.gohtml", "tailwind.gohtml"))
+		"current-user.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignUp = views.Must(views.ParseFS(templates.FS,
 		"signup.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignIn = views.Must(views.ParseFS(templates.FS,
@@ -102,7 +102,8 @@ func main() {
 	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
 	router.Get("/", controllers.Static(homeTemplate))
 
-	router.NotFound(controllers.NotFound)
+	notFoundTemplate := views.Must(views.ParseFS(templates.FS, "not-found.gohtml", "tailwind.gohtml"))
+	router.NotFound(controllers.NotFound(notFoundTemplate))
 
 	fmt.Printf("Starting a server on %s...\n", cfg.Server.Address)
 	http.ListenAndServe(cfg.Server.Address, router)
