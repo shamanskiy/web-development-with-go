@@ -18,7 +18,7 @@ type Template struct {
 	htmlTemplate *template.Template
 }
 
-func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}) {
+func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}, errs ...error) {
 	// cloning template to avoid race condition
 	// when handling multiple user requests
 	clonedTemplate, err := t.htmlTemplate.Clone()
@@ -34,6 +34,13 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 		},
 		"currentUser": func() *models.User {
 			return context.User(r.Context())
+		},
+		"errors": func() []string {
+			var errorMessages []string
+			for _, err := range errs {
+				errorMessages = append(errorMessages, err.Error())
+			}
+			return errorMessages
 		},
 	})
 
@@ -58,6 +65,9 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 		},
 		"currentUser": func() (*models.User, error) {
 			return nil, fmt.Errorf("currentUser not implemented")
+		},
+		"errors": func() []string {
+			return nil
 		},
 	})
 

@@ -26,11 +26,14 @@ type Users struct {
 	ServerAddress        string
 }
 
+type SignUpData struct {
+	Email string
+}
+
 func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		Email string
+	data := SignUpData{
+		Email: r.FormValue("email"),
 	}
-	data.Email = r.FormValue("email")
 	u.Templates.SignUp.Execute(w, r, data)
 }
 
@@ -39,13 +42,15 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can't parse the submitted form", http.StatusBadRequest)
 		return
 	}
+
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-
 	user, err := u.UserService.Create(email, password)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		data := SignUpData{
+			Email: email,
+		}
+		u.Templates.SignUp.Execute(w, r, data, err)
 		return
 	}
 
