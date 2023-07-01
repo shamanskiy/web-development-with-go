@@ -34,7 +34,6 @@ func (u Users) SignUpFormHandler(w http.ResponseWriter, r *http.Request) {
 
 func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		u.Templates.SignUp.Execute(w, r, EmailData{}, err)
 		return
 	}
@@ -44,10 +43,7 @@ func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := u.UserService.Create(email, password)
 	if err != nil {
 		if errors.Is(err, models.ErrEmailTaken) {
-			w.WriteHeader(http.StatusBadRequest)
 			err = errors.Public(err, "That email address is already associated with an account.")
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
 		}
 		u.Templates.SignUp.Execute(w, r, emailData(email), err)
 		return
@@ -71,7 +67,6 @@ func (u Users) SignInFormHandler(w http.ResponseWriter, r *http.Request) {
 
 func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		u.Templates.SignIn.Execute(w, r, nil, err)
 		return
 	}
@@ -81,13 +76,9 @@ func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := u.UserService.Authenticate(email, password)
 	if err != nil {
 		if errors.Is(err, models.ErrEmailNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
 			err = errors.Public(err, "No account found associated with this email.")
 		} else if errors.Is(err, models.ErrPasswordWrong) {
-			w.WriteHeader(http.StatusBadRequest)
 			err = errors.Public(err, "Provided password is wrong.")
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
 		}
 		u.Templates.SignIn.Execute(w, r, emailData(email), err)
 		return
@@ -95,7 +86,6 @@ func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := u.SessionService.Create(user.ID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		u.Templates.SignIn.Execute(w, r, emailData(email), err)
 		return
 	}
@@ -140,10 +130,7 @@ func (u Users) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	pwReset, err := u.PasswordResetService.Create(data.Email)
 	if err != nil {
 		if errors.Is(err, models.ErrEmailNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
 			err = errors.Public(err, "No account found associated with this email.")
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
 		}
 		u.Templates.ForgotPassword.Execute(w, r, data, err)
 		return
@@ -156,7 +143,6 @@ func (u Users) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	err = u.EmailService.ForgotPassword(data.Email,
 		"http://"+u.ServerAddress+"/reset-pw?"+vals.Encode())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		u.Templates.ForgotPassword.Execute(w, r, data, err)
 		return
 	}
@@ -183,10 +169,7 @@ func (u Users) NewPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := u.PasswordResetService.Consume(data.Token)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidToken) {
-			w.WriteHeader(http.StatusBadRequest)
 			err = errors.Public(err, "Submitted authorization token is invalid.")
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
 		}
 		u.Templates.ResetPassword.Execute(w, r, data, err)
 		return
@@ -194,7 +177,6 @@ func (u Users) NewPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = u.UserService.UpdatePassword(user.ID, data.Password)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		u.Templates.ResetPassword.Execute(w, r, data, err)
 		return
 	}

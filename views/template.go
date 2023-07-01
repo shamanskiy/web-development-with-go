@@ -33,7 +33,7 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 		return
 	}
 
-	errorMessages := parseErrors(errs)
+	errorMessage, statusCode := parseError(errs)
 	clonedTemplate = clonedTemplate.Funcs(template.FuncMap{
 		"csrfField": func() template.HTML {
 			return csrf.TemplateField(r)
@@ -42,10 +42,11 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 			return context.User(r.Context())
 		},
 		"errors": func() []string {
-			return errorMessages
+			return errorMessage
 		},
 	})
 
+	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// buffering template execution to avoid sending partial HTML on error
@@ -89,16 +90,18 @@ func Must(t Template, err error) Template {
 	return t
 }
 
-func parseErrors(errs []error) []string {
-	var errorMessages []string
-	for _, err := range errs {
+func parseError(err []error) (errorMessage []string, statusCode int) {
+	statusCode = http.StatusOK
+	for _, e := range err {
 		var publicErr public
-		if errors.As(err, &publicErr) {
-			errorMessages = append(errorMessages, publicErr.Public())
+		if errors.As(e, &publicErr) {
+			statusCode = http.StatusBadRequest
+			errorMessage = append(errorMessage, publicErr.Public())
 		} else {
-			fmt.Println(err)
-			errorMessages = append(errorMessages, "Something went wrong.")
+			fmt.Println(e)
+			statusCode = http.StatusInternalServerError
+			errorMessage = append(errorMessage, "Something went wrong.")
 		}
 	}
-	return errorMessages
+	return errorMessage, statusCode
 }
