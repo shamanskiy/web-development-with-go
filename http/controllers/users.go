@@ -27,20 +27,15 @@ type Users struct {
 	ServerAddress        string
 }
 
-type SignUpData struct {
-	Email string
-}
-
-func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	data := SignUpData{
-		Email: r.FormValue("email"),
-	}
+func (u Users) SignUpFormHandler(w http.ResponseWriter, r *http.Request) {
+	data := emailData(r.FormValue("email"))
 	u.Templates.SignUp.Execute(w, r, data)
 }
 
-func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Can't parse the submitted form", http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		u.Templates.SignUp.Execute(w, r, EmailData{}, err)
 		return
 	}
 
@@ -49,12 +44,12 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := u.UserService.Create(email, password)
 	if err != nil {
 		if errors.Is(err, models.ErrEmailTaken) {
+			w.WriteHeader(http.StatusBadRequest)
 			err = errors.Public(err, "That email address is already associated with an account.")
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		data := SignUpData{
-			Email: email,
-		}
-		u.Templates.SignUp.Execute(w, r, data, err)
+		u.Templates.SignUp.Execute(w, r, emailData(email), err)
 		return
 	}
 
@@ -69,17 +64,15 @@ func (u Users) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
-func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		Email string
-	}
-	data.Email = r.FormValue("email")
+func (u Users) SignInFormHandler(w http.ResponseWriter, r *http.Request) {
+	data := emailData(r.FormValue("email"))
 	u.Templates.SignIn.Execute(w, r, data)
 }
 
-func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Can't parse the submitted form", http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		u.Templates.SignIn.Execute(w, r, nil, err)
 		return
 	}
 	email := r.FormValue("email")
@@ -87,15 +80,23 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.UserService.Authenticate(email, password)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		if errors.Is(err, models.ErrEmailNotFound) {
+			w.WriteHeader(http.StatusBadRequest)
+			err = errors.Public(err, "No account found associated with this email.")
+		} else if errors.Is(err, models.ErrPasswordWrong) {
+			w.WriteHeader(http.StatusBadRequest)
+			err = errors.Public(err, "Provided password is wrong.")
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		u.Templates.SignIn.Execute(w, r, emailData(email), err)
 		return
 	}
 
 	session, err := u.SessionService.Create(user.ID)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		u.Templates.SignIn.Execute(w, r, emailData(email), err)
 		return
 	}
 	cookie.Set(w, cookie.CookieSession, session.Token)
@@ -107,17 +108,13 @@ func (u Users) AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 // so it doesn't check if the user exists
 func (u Users) CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := context.User(r.Context())
-
-	var data struct {
-		Email string
-	}
-	data.Email = user.Email
-	u.Templates.CurrentUser.Execute(w, r, data)
+	u.Templates.CurrentUser.Execute(w, r, emailData(user.Email))
 }
 
 func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := cookie.Read(r, cookie.CookieSession)
 	if err != nil {
+		fmt.Println(err)
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
@@ -125,7 +122,7 @@ func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	err = u.SessionService.Delete(token)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
 
@@ -133,26 +130,22 @@ func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/signin", http.StatusFound)
 }
 
-func (u Users) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		Email string
-	}
-	data.Email = r.FormValue("email")
+func (u Users) ForgotPasswordFormHandler(w http.ResponseWriter, r *http.Request) {
+	data := emailData(r.FormValue("email"))
 	u.Templates.ForgotPassword.Execute(w, r, data)
 }
 
-func (u Users) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		Email string
-	}
-	data.Email = r.FormValue("email")
-
+func (u Users) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	data := emailData(r.FormValue("email"))
 	pwReset, err := u.PasswordResetService.Create(data.Email)
 	if err != nil {
-		// TODO: Handle other cases in the future. For instance,
-		// if a user doesn't exist with the email address.
-		fmt.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		if errors.Is(err, models.ErrEmailNotFound) {
+			w.WriteHeader(http.StatusBadRequest)
+			err = errors.Public(err, "No account found associated with this email.")
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		u.Templates.ForgotPassword.Execute(w, r, data, err)
 		return
 	}
 
@@ -163,15 +156,15 @@ func (u Users) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Reques
 	err = u.EmailService.ForgotPassword(data.Email,
 		"http://"+u.ServerAddress+"/reset-pw?"+vals.Encode())
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		u.Templates.ForgotPassword.Execute(w, r, data, err)
 		return
 	}
 
 	u.Templates.CheckYourEmail.Execute(w, r, data)
 }
 
-func (u Users) NewPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (u Users) NewPasswordFormHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Token string
 	}
@@ -179,7 +172,7 @@ func (u Users) NewPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	u.Templates.ResetPassword.Execute(w, r, data)
 }
 
-func (u Users) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (u Users) NewPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Token    string
 		Password string
@@ -189,16 +182,20 @@ func (u Users) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.PasswordResetService.Consume(data.Token)
 	if err != nil {
-		fmt.Println(err)
-		// TODO: Distinguish between server errors and invalid token errors.
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		if errors.Is(err, models.ErrInvalidToken) {
+			w.WriteHeader(http.StatusBadRequest)
+			err = errors.Public(err, "Submitted authorization token is invalid.")
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		u.Templates.ResetPassword.Execute(w, r, data, err)
 		return
 	}
 
 	err = u.UserService.UpdatePassword(user.ID, data.Password)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		u.Templates.ResetPassword.Execute(w, r, data, err)
 		return
 	}
 
@@ -213,4 +210,14 @@ func (u Users) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	cookie.Set(w, cookie.CookieSession, session.Token)
 	http.Redirect(w, r, "/users/me", http.StatusFound)
+}
+
+type EmailData struct {
+	Email string
+}
+
+func emailData(email string) EmailData {
+	return EmailData{
+		Email: email,
+	}
 }

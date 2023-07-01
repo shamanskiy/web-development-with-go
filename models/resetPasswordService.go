@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -51,6 +52,9 @@ func (prs *PasswordResetService) Create(email string) (*PasswordReset, error) {
 	  FROM users WHERE email=$1`, email)
 	err = row.Scan(&passwordReset.UserID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrEmailNotFound
+		}
 		return nil, fmt.Errorf("create password reset: %w", err)
 	}
 
@@ -79,6 +83,9 @@ func (prs *PasswordResetService) Consume(token string) (*User, error) {
 		tokenHash, time.Now())
 	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrInvalidToken
+		}
 		return nil, fmt.Errorf("comsume password reset: %w", err)
 	}
 

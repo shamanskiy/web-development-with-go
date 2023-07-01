@@ -12,7 +12,10 @@ import (
 )
 
 var (
-	ErrEmailTaken = errors.New("models: email address is already in use")
+	ErrEmailTaken    = errors.New("models: email address is already in use")
+	ErrEmailNotFound = errors.New("models: email address is not found")
+	ErrPasswordWrong = errors.New("models: password is wrong")
+	ErrInvalidToken  = errors.New("models: invalid reset password token")
 )
 
 type User struct {
@@ -69,11 +72,17 @@ func (us *UserService) Authenticate(email, password string) (*User, error) {
 	  FROM users WHERE email=$1`, email)
 	err := row.Scan(&user.ID, &user.PasswordHash)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrEmailNotFound
+		}
 		return nil, fmt.Errorf("authenticate: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return nil, ErrPasswordWrong
+		}
 		return nil, fmt.Errorf("authenticate: %w", err)
 	}
 
