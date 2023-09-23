@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/Shamanskiy/lenslocked/http/context"
 	"github.com/Shamanskiy/lenslocked/models"
@@ -62,7 +63,7 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 	// placeholder template and csrfField func to parse the template
-	htmlTemplate := template.New(patterns[0])
+	htmlTemplate := template.New(filepath.Base(patterns[0]))
 	htmlTemplate = htmlTemplate.Funcs(template.FuncMap{
 		"csrfField": func() (template.HTML, error) {
 			return "", fmt.Errorf("csrfField not implemented")

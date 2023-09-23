@@ -47,6 +47,10 @@ func main() {
 		DB: db,
 	}
 
+	galleryService := &models.GalleryService{
+		DB: db,
+	}
+
 	emailService := models.NewEmailService(cfg.SMTP)
 
 	userMiddleware := middleware.UserMiddleware{
@@ -65,18 +69,24 @@ func main() {
 		ServerAddress:        cfg.Server.Address,
 	}
 	usersController.Templates.CurrentUser = views.Must(views.ParseFS(templates.FS,
-		"currentUser.gohtml", "tailwind.gohtml"))
+		"users/currentUser.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignUp = views.Must(views.ParseFS(templates.FS,
-		"signUp.gohtml", "tailwind.gohtml"))
+		"users/signUp.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignIn = views.Must(views.ParseFS(templates.FS,
-		"signIn.gohtml", "tailwind.gohtml"))
+		"users/signIn.gohtml", "tailwind.gohtml"))
 	usersController.Templates.ForgotPassword = views.Must(views.ParseFS(templates.FS,
-		"forgotPassword.gohtml", "tailwind.gohtml"))
+		"users/forgotPassword.gohtml", "tailwind.gohtml"))
 	usersController.Templates.CheckYourEmail = views.Must(views.ParseFS(templates.FS,
-		"checkYourEmail.gohtml", "tailwind.gohtml"))
+		"users/checkYourEmail.gohtml", "tailwind.gohtml"))
 	usersController.Templates.ResetPassword = views.Must(views.ParseFS(templates.FS,
-		"resetPassword.gohtml", "tailwind.gohtml",
+		"users/resetPassword.gohtml", "tailwind.gohtml",
 	))
+
+	galleriesController := controllers.Galleries{
+		GalleryService: galleryService,
+	}
+	galleriesController.Templates.NewGallery = views.Must(views.ParseFS(templates.FS,
+		"galleries/newGallery.gohtml", "tailwind.gohtml"))
 
 	router.Route("/users/me", func(r chi.Router) {
 		r.Use(userMiddleware.RequireUser)
@@ -92,6 +102,8 @@ func main() {
 	router.Post("/forgot-password", usersController.ForgotPasswordHandler)
 	router.Get("/reset-password", usersController.NewPasswordFormHandler)
 	router.Post("/reset-password", usersController.NewPasswordHandler)
+
+	router.Get("/galleries/new-gallery", galleriesController.NewGalleryFormHandler)
 
 	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
 	router.Get("/contact", controllers.Static(contactTemplate))
