@@ -103,7 +103,11 @@ func main() {
 	router.Get("/reset-password", usersController.NewPasswordFormHandler)
 	router.Post("/reset-password", usersController.NewPasswordHandler)
 
-	router.Get("/galleries/new-gallery", galleriesController.NewGalleryFormHandler)
+	// this redirects logged-out users to the sign-in page
+	router.Route("/galleries", func(r chi.Router) {
+		r.Use(userMiddleware.RequireUser)
+		r.Get("/new-gallery", galleriesController.NewGalleryFormHandler)
+	})
 
 	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
 	router.Get("/contact", controllers.Static(contactTemplate))
