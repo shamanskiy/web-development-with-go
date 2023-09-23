@@ -107,6 +107,7 @@ func main() {
 	router.Route("/galleries", func(r chi.Router) {
 		r.Use(userMiddleware.RequireUser)
 		r.Get("/new-gallery", galleriesController.NewGalleryFormHandler)
+		r.Post("/", galleriesController.NewGalleryHandler)
 	})
 
 	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))

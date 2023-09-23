@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/Shamanskiy/lenslocked/http/context"
 	"github.com/Shamanskiy/lenslocked/models"
 )
 
@@ -14,17 +16,20 @@ type Galleries struct {
 }
 
 func (g Galleries) NewGalleryFormHandler(w http.ResponseWriter, r *http.Request) {
-	data := galleryData(r.FormValue("title"))
-	g.Templates.NewGallery.Execute(w, r, data)
-
+	gallery := models.Gallery{Title: r.FormValue("title")}
+	g.Templates.NewGallery.Execute(w, r, gallery)
 }
 
-type GalleryData struct {
-	Title string
-}
+func (g Galleries) NewGalleryHandler(w http.ResponseWriter, r *http.Request) {
+	userID := context.User(r.Context()).ID
+	title := r.FormValue("title")
 
-func galleryData(title string) GalleryData {
-	return GalleryData{
-		Title: title,
+	gallery, err := g.GalleryService.Create(userID, title)
+	if err != nil {
+		g.Templates.NewGallery.Execute(w, r, gallery, err)
+		return
 	}
+
+	editGalleryPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editGalleryPath, http.StatusFound)
 }
