@@ -141,7 +141,7 @@ func (u Users) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: Make the URL here configurable
 	err = u.EmailService.ForgotPassword(data.Email,
-		"http://"+u.ServerAddress+"/reset-pw?"+vals.Encode())
+		"http://"+u.ServerAddress+"/reset-password?"+vals.Encode())
 	if err != nil {
 		u.Templates.ForgotPassword.Execute(w, r, data, err)
 		return

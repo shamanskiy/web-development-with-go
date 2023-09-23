@@ -65,17 +65,17 @@ func main() {
 		ServerAddress:        cfg.Server.Address,
 	}
 	usersController.Templates.CurrentUser = views.Must(views.ParseFS(templates.FS,
-		"current-user.gohtml", "tailwind.gohtml"))
+		"currentUser.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignUp = views.Must(views.ParseFS(templates.FS,
-		"signup.gohtml", "tailwind.gohtml"))
+		"signUp.gohtml", "tailwind.gohtml"))
 	usersController.Templates.SignIn = views.Must(views.ParseFS(templates.FS,
-		"signin.gohtml", "tailwind.gohtml"))
+		"signIn.gohtml", "tailwind.gohtml"))
 	usersController.Templates.ForgotPassword = views.Must(views.ParseFS(templates.FS,
-		"forgot-pw.gohtml", "tailwind.gohtml"))
+		"forgotPassword.gohtml", "tailwind.gohtml"))
 	usersController.Templates.CheckYourEmail = views.Must(views.ParseFS(templates.FS,
-		"check-your-email.gohtml", "tailwind.gohtml"))
+		"checkYourEmail.gohtml", "tailwind.gohtml"))
 	usersController.Templates.ResetPassword = views.Must(views.ParseFS(templates.FS,
-		"reset-pw.gohtml", "tailwind.gohtml",
+		"resetPassword.gohtml", "tailwind.gohtml",
 	))
 
 	router.Route("/users/me", func(r chi.Router) {
@@ -88,10 +88,10 @@ func main() {
 	router.Get("/signin", usersController.SignInFormHandler)
 	router.Post("/signin", usersController.SignInHandler)
 	router.Post("/signout", usersController.SignOutHandler)
-	router.Get("/forgot-pw", usersController.ForgotPasswordFormHandler)
-	router.Post("/forgot-pw", usersController.ForgotPasswordHandler)
-	router.Get("/reset-pw", usersController.NewPasswordFormHandler)
-	router.Post("/reset-pw", usersController.NewPasswordHandler)
+	router.Get("/forgot-password", usersController.ForgotPasswordFormHandler)
+	router.Post("/forgot-password", usersController.ForgotPasswordHandler)
+	router.Get("/reset-password", usersController.NewPasswordFormHandler)
+	router.Post("/reset-password", usersController.NewPasswordHandler)
 
 	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
 	router.Get("/contact", controllers.Static(contactTemplate))
@@ -102,7 +102,7 @@ func main() {
 	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
 	router.Get("/", controllers.Static(homeTemplate))
 
-	notFoundTemplate := views.Must(views.ParseFS(templates.FS, "not-found.gohtml", "tailwind.gohtml"))
+	notFoundTemplate := views.Must(views.ParseFS(templates.FS, "notFound.gohtml", "tailwind.gohtml"))
 	router.NotFound(controllers.NotFound(notFoundTemplate))
 
 	fmt.Printf("Starting a server on %s...\n", cfg.Server.Address)
