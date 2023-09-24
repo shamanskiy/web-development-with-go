@@ -68,7 +68,7 @@ func (gs *GalleryService) FindByUserID(userId int) ([]Gallery, error) {
 		gallery := Gallery{
 			UserID: userId,
 		}
-		err := rows.Scan(gallery.ID, gallery.Title)
+		err := rows.Scan(&gallery.ID, &gallery.Title)
 		if err != nil {
 			return nil, fmt.Errorf("find galleries by user_id: %w", err)
 		}
@@ -82,7 +82,7 @@ func (gs *GalleryService) FindByUserID(userId int) ([]Gallery, error) {
 	return galleries, nil
 }
 
-func (gs *GalleryService) Update(gallery Gallery) error {
+func (gs *GalleryService) Update(gallery *Gallery) error {
 	_, err := gs.DB.Exec(`
 	  UPDATE galleries 
 	  SET title=$1

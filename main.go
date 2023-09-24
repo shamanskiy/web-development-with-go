@@ -61,6 +61,11 @@ func main() {
 
 	router.Use(middleware.Logger, csrfMiddleware, userMiddleware.SetUser)
 
+	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
+	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
+	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
+	notFoundTemplate := views.Must(views.ParseFS(templates.FS, "notFound.gohtml", "tailwind.gohtml"))
+
 	usersController := controllers.Users{
 		UserService:          userService,
 		SessionService:       sessionService,
@@ -87,6 +92,11 @@ func main() {
 	}
 	galleriesController.Templates.NewGallery = views.Must(views.ParseFS(templates.FS,
 		"galleries/newGallery.gohtml", "tailwind.gohtml"))
+	galleriesController.Templates.EditGallery = views.Must(views.ParseFS(templates.FS,
+		"galleries/editGallery.gohtml", "tailwind.gohtml"))
+	galleriesController.Templates.IndexGalleries = views.Must(views.ParseFS(templates.FS,
+		"galleries/indexGalleries.gohtml", "tailwind.gohtml"))
+	galleriesController.Templates.NotFound = notFoundTemplate
 
 	router.Route("/users/me", func(r chi.Router) {
 		r.Use(userMiddleware.RequireUser)
@@ -107,19 +117,15 @@ func main() {
 	router.Route("/galleries", func(r chi.Router) {
 		r.Use(userMiddleware.RequireUser)
 		r.Get("/new-gallery", galleriesController.NewGalleryFormHandler)
+		r.Get("/", galleriesController.IndexGalleriesHandler)
 		r.Post("/", galleriesController.NewGalleryHandler)
+		r.Get("/{id}/edit", galleriesController.EditGalleryFormHandler)
+		r.Post("/{id}/edit", galleriesController.EditGalleryHandler)
 	})
 
-	contactTemplate := views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
-	router.Get("/contact", controllers.Static(contactTemplate))
-
-	faqTemplate := views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
-	router.Get("/faq", controllers.FAQ(faqTemplate))
-
-	homeTemplate := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
 	router.Get("/", controllers.Static(homeTemplate))
-
-	notFoundTemplate := views.Must(views.ParseFS(templates.FS, "notFound.gohtml", "tailwind.gohtml"))
+	router.Get("/faq", controllers.FAQ(faqTemplate))
+	router.Get("/contact", controllers.Static(contactTemplate))
 	router.NotFound(controllers.NotFound(notFoundTemplate))
 
 	fmt.Printf("Starting a server on %s...\n", cfg.Server.Address)
