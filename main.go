@@ -98,7 +98,6 @@ func main() {
 		"galleries/indexGalleries.gohtml", "tailwind.gohtml"))
 	galleriesController.Templates.ViewGallery = views.Must(views.ParseFS(templates.FS,
 		"galleries/viewGallery.gohtml", "tailwind.gohtml"))
-	galleriesController.Templates.NotFound = notFoundTemplate
 
 	router.Route("/users/me", func(r chi.Router) {
 		r.Use(userMiddleware.RequireUser)
@@ -125,6 +124,7 @@ func main() {
 			r.Post("/", galleriesController.NewGalleryHandler)
 			r.Get("/{id}/edit", galleriesController.EditGalleryFormHandler)
 			r.Post("/{id}/edit", galleriesController.EditGalleryHandler)
+			r.Post("/{id}/delete", galleriesController.DeleteGalleryHandler)
 		})
 	})
 
@@ -173,7 +173,7 @@ func loadEnvConfig() (config, error) {
 	cfg.CSRF.Secure = false
 
 	// TODO: Read the server values from an ENV variable
-	cfg.Server.Address = "localhost:3000"
+	cfg.Server.Address = ":3000"
 
 	return cfg, nil
 }

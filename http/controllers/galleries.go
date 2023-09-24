@@ -19,7 +19,6 @@ type Galleries struct {
 		EditGallery    Template
 		IndexGalleries Template
 		ViewGallery    Template
-		NotFound       Template
 	}
 	GalleryService *models.GalleryService
 }
@@ -44,29 +43,8 @@ func (g Galleries) NewGalleryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g Galleries) EditGalleryFormHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
 	if err != nil {
-		err = errors.Public(err, "Requested gallery with an invalid ID.")
-		g.Templates.NotFound.Execute(w, r, struct{}{}, err)
-		return
-	}
-	fmt.Println(id)
-
-	gallery, err := g.GalleryService.FindByID(id)
-	if err != nil {
-		if errors.Is(err, models.ErrResourceNotFound) {
-			err = errors.Public(err, "Requested gallery doesn't exist.")
-			g.Templates.NotFound.Execute(w, r, struct{}{}, err)
-			return
-		}
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-
-	user := context.User(r.Context())
-	if gallery.UserID != user.ID {
-		err = errors.Public(err, "Requested gallery doesn't exist.")
-		g.Templates.NotFound.Execute(w, r, struct{}{}, err)
 		return
 	}
 
@@ -74,29 +52,8 @@ func (g Galleries) EditGalleryFormHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (g Galleries) EditGalleryHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
 	if err != nil {
-		err = errors.Public(err, "Attempted to edit gallery with an invalid ID.")
-		g.Templates.NotFound.Execute(w, r, struct{}{}, err)
-		return
-	}
-	fmt.Println(id)
-
-	gallery, err := g.GalleryService.FindByID(id)
-	if err != nil {
-		if errors.Is(err, models.ErrResourceNotFound) {
-			err = errors.Public(err, "Attempted to edit non-existing gallery.")
-			g.Templates.NotFound.Execute(w, r, struct{}{}, err)
-			return
-		}
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-
-	user := context.User(r.Context())
-	if gallery.UserID != user.ID {
-		err = errors.Public(err, "Attempted to edit non-existing gallery.")
-		g.Templates.NotFound.Execute(w, r, struct{}{}, err)
 		return
 	}
 
@@ -131,20 +88,8 @@ func (g Galleries) IndexGalleriesHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	gallery, err := g.galleryByID(w, r)
 	if err != nil {
-		err = errors.Public(err, "Requested gallery with an invalid ID.")
-		g.Templates.NotFound.Execute(w, r, struct{}{}, err)
-		return
-	}
-	gallery, err := g.GalleryService.FindByID(id)
-	if err != nil {
-		if errors.Is(err, models.ErrResourceNotFound) {
-			err = errors.Public(err, "Requested gallery doesn't exist.")
-			g.Templates.NotFound.Execute(w, r, struct{}{}, err)
-			return
-		}
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
@@ -167,4 +112,54 @@ func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
 		data.Images = append(data.Images, catImageURL)
 	}
 	g.Templates.ViewGallery.Execute(w, r, data)
+}
+
+func (g Galleries) DeleteGalleryHandler(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
+	if err != nil {
+		return
+	}
+	err = g.GalleryService.Delete(*gallery)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/galleries", http.StatusFound)
+}
+
+type galleryOpt func(http.ResponseWriter, *http.Request, *models.Gallery) error
+
+func (g Galleries) galleryByID(w http.ResponseWriter, r *http.Request, opts ...galleryOpt) (*models.Gallery, error) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusNotFound)
+		return nil, err
+	}
+	gallery, err := g.GalleryService.FindByID(id)
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			http.Error(w, "Gallery not found", http.StatusNotFound)
+			return nil, err
+		}
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return nil, err
+	}
+
+	for _, opt := range opts {
+		err = opt(w, r, gallery)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return gallery, nil
+}
+
+func userMustOwnGallery(w http.ResponseWriter, r *http.Request, gallery *models.Gallery) error {
+	user := context.User(r.Context())
+	if user.ID != gallery.UserID {
+		http.Error(w, "You are not authorized to edit this gallery", http.StatusForbidden)
+		return fmt.Errorf("user does not have access to this gallery")
+	}
+	return nil
 }
