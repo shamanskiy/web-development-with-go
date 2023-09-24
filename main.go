@@ -96,6 +96,8 @@ func main() {
 		"galleries/editGallery.gohtml", "tailwind.gohtml"))
 	galleriesController.Templates.IndexGalleries = views.Must(views.ParseFS(templates.FS,
 		"galleries/indexGalleries.gohtml", "tailwind.gohtml"))
+	galleriesController.Templates.ViewGallery = views.Must(views.ParseFS(templates.FS,
+		"galleries/viewGallery.gohtml", "tailwind.gohtml"))
 	galleriesController.Templates.NotFound = notFoundTemplate
 
 	router.Route("/users/me", func(r chi.Router) {
@@ -115,12 +117,15 @@ func main() {
 
 	// this redirects logged-out users to the sign-in page
 	router.Route("/galleries", func(r chi.Router) {
-		r.Use(userMiddleware.RequireUser)
-		r.Get("/new-gallery", galleriesController.NewGalleryFormHandler)
-		r.Get("/", galleriesController.IndexGalleriesHandler)
-		r.Post("/", galleriesController.NewGalleryHandler)
-		r.Get("/{id}/edit", galleriesController.EditGalleryFormHandler)
-		r.Post("/{id}/edit", galleriesController.EditGalleryHandler)
+		r.Get("/{id}", galleriesController.ViewGalleryHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(userMiddleware.RequireUser)
+			r.Get("/new-gallery", galleriesController.NewGalleryFormHandler)
+			r.Get("/", galleriesController.IndexGalleriesHandler)
+			r.Post("/", galleriesController.NewGalleryHandler)
+			r.Get("/{id}/edit", galleriesController.EditGalleryFormHandler)
+			r.Post("/{id}/edit", galleriesController.EditGalleryHandler)
+		})
 	})
 
 	router.Get("/", controllers.Static(homeTemplate))

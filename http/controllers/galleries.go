@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sort"
 	"strconv"
@@ -17,6 +18,7 @@ type Galleries struct {
 		NewGallery     Template
 		EditGallery    Template
 		IndexGalleries Template
+		ViewGallery    Template
 		NotFound       Template
 	}
 	GalleryService *models.GalleryService
@@ -126,4 +128,43 @@ func (g Galleries) IndexGalleriesHandler(w http.ResponseWriter, r *http.Request)
 	data.Galleries = galleries
 
 	g.Templates.IndexGalleries.Execute(w, r, data)
+}
+
+func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		err = errors.Public(err, "Requested gallery with an invalid ID.")
+		g.Templates.NotFound.Execute(w, r, struct{}{}, err)
+		return
+	}
+	gallery, err := g.GalleryService.FindByID(id)
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			err = errors.Public(err, "Requested gallery doesn't exist.")
+			g.Templates.NotFound.Execute(w, r, struct{}{}, err)
+			return
+		}
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	var data struct {
+		ID     int
+		Title  string
+		Images []string
+	}
+	data.ID = gallery.ID
+	data.Title = gallery.Title
+	// We are going to psuedo-randomly come up with 20 images to render for our
+	// gallery until we actually support uploading images. These images will use
+	// placekitten.com, which gives us cat images.
+	for i := 0; i < 20; i++ {
+		// width and height are random values betwee 200 and 700
+		w, h := rand.Intn(500)+200, rand.Intn(500)+200
+		// using the width and height, we generate a URL
+		catImageURL := fmt.Sprintf("https://placekitten.com/%d/%d", w, h)
+		// Then we add the URL to our images.
+		data.Images = append(data.Images, catImageURL)
+	}
+	g.Templates.ViewGallery.Execute(w, r, data)
 }
