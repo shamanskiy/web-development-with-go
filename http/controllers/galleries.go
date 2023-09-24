@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/Shamanskiy/lenslocked/errors"
@@ -110,15 +111,15 @@ func (g Galleries) EditGalleryHandler(w http.ResponseWriter, r *http.Request) {
 
 func (g Galleries) IndexGalleriesHandler(w http.ResponseWriter, r *http.Request) {
 	user := context.User(r.Context())
-	fmt.Println(user)
 	galleries, err := g.GalleryService.FindByUserID(user.ID)
-	fmt.Println(err)
-	fmt.Println(galleries)
 	if err != nil {
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 
+	sort.Slice(galleries, func(a, b int) bool {
+		return galleries[a].ID < galleries[b].ID
+	})
 	var data struct {
 		Galleries []models.Gallery
 	}
