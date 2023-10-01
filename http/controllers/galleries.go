@@ -23,6 +23,11 @@ type Galleries struct {
 	GalleryService *models.GalleryService
 }
 
+const (
+	GALLERY_PUBLIC  = "public"
+	GALLERY_PRIVATE = "private"
+)
+
 func (g Galleries) NewGalleryFormHandler(w http.ResponseWriter, r *http.Request) {
 	gallery := models.Gallery{Title: r.FormValue("title")}
 	g.Templates.NewGallery.Execute(w, r, gallery)
@@ -58,7 +63,9 @@ func (g Galleries) EditGalleryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	title := r.FormValue("title")
+	visibility := r.FormValue("visibility")
 	gallery.Title = title
+	gallery.Published = visibility == GALLERY_PUBLIC
 	err = g.GalleryService.Update(gallery)
 	if err != nil {
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
@@ -88,7 +95,7 @@ func (g Galleries) IndexGalleriesHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
-	gallery, err := g.galleryByID(w, r)
+	gallery, err := g.galleryByID(w, r, userMustOwnPrivateGallery)
 	if err != nil {
 		return
 	}
@@ -162,4 +169,19 @@ func userMustOwnGallery(w http.ResponseWriter, r *http.Request, gallery *models.
 		return fmt.Errorf("user does not have access to this gallery")
 	}
 	return nil
+}
+
+func userMustOwnPrivateGallery(w http.ResponseWriter, r *http.Request, gallery *models.Gallery) error {
+	if gallery.Published {
+		return nil
+	}
+
+	user := context.User(r.Context())
+	if user == nil || user.ID != gallery.UserID {
+		http.Error(w, "You are not authorized to view this gallery", http.StatusForbidden)
+		return fmt.Errorf("user does not have access to this gallery")
+	}
+
+	return nil
+
 }

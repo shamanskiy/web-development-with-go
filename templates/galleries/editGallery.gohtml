@@ -8,7 +8,7 @@
     {{csrfField}}
   </div>
   <div class="py-2">
-    <label for="title" class="text-sm font-semibold text-gray-800">
+    <label for="title" class="block mb-1 text-sm font-semibold text-gray-800">
       Title
     </label>
     <input
@@ -21,6 +21,20 @@
       value="{{.Title}}"
       autofocus
     />
+  </div>
+  <div class="py-2">
+      <label for="visibility" class="block mb-1 text-sm font-semibold text-gray-800">
+        Visibility
+      </label>
+      <select  
+        name="visibility"
+        id="visibility"
+        class="appearance-none block cursor-pointer w-24 border px-3 py-2 border-gray-300 text-gray-800 rounded"
+        required
+      >
+        <option value="public" {{if .Published}} selected {{end}}>Public</option>
+        <option value="private" {{if not .Published}} selected {{end}}>Private</option>
+      </select>
   </div>
   <div class="py-4">
     <button type="submit" class="py-2 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold text-lg">

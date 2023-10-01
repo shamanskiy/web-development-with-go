@@ -7,9 +7,10 @@ import (
 )
 
 type Gallery struct {
-	ID     int
-	UserID int
-	Title  string
+	ID        int
+	UserID    int
+	Title     string
+	Published bool
 }
 
 type GalleryService struct {
@@ -23,8 +24,8 @@ func (gs *GalleryService) Create(userId int, title string) (*Gallery, error) {
 	}
 
 	row := gs.DB.QueryRow(`
-	  INSERT INTO galleries (user_id, title)
-	  VALUES ($1, $2) RETURNING id`,
+	  INSERT INTO galleries (user_id, title, published)
+	  VALUES ($1, $2, false) RETURNING id`,
 		gallery.UserID, gallery.Title)
 	err := row.Scan(&gallery.ID)
 
@@ -41,9 +42,9 @@ func (gs *GalleryService) FindByID(id int) (*Gallery, error) {
 	}
 
 	row := gs.DB.QueryRow(`
-	  SELECT user_id, title 
+	  SELECT user_id, title, published
 	  FROM galleries WHERE id=$1`, id)
-	err := row.Scan(&gallery.UserID, &gallery.Title)
+	err := row.Scan(&gallery.UserID, &gallery.Title, &gallery.Published)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -57,7 +58,7 @@ func (gs *GalleryService) FindByID(id int) (*Gallery, error) {
 
 func (gs *GalleryService) FindByUserID(userId int) ([]Gallery, error) {
 	rows, err := gs.DB.Query(`
-	  SELECT id, title 
+	  SELECT id, title, published
 	  FROM galleries WHERE user_id=$1`, userId)
 	if err != nil {
 		return nil, fmt.Errorf("find galleries by user_id: %w", err)
@@ -68,7 +69,7 @@ func (gs *GalleryService) FindByUserID(userId int) ([]Gallery, error) {
 		gallery := Gallery{
 			UserID: userId,
 		}
-		err := rows.Scan(&gallery.ID, &gallery.Title)
+		err := rows.Scan(&gallery.ID, &gallery.Title, &gallery.Published)
 		if err != nil {
 			return nil, fmt.Errorf("find galleries by user_id: %w", err)
 		}
@@ -85,8 +86,8 @@ func (gs *GalleryService) FindByUserID(userId int) ([]Gallery, error) {
 func (gs *GalleryService) Update(gallery *Gallery) error {
 	_, err := gs.DB.Exec(`
 	  UPDATE galleries 
-	  SET title=$1
-		WHERE id=$2`, gallery.Title, gallery.ID)
+	  SET title=$1, published=$2
+		WHERE id=$3`, gallery.Title, gallery.Published, gallery.ID)
 	if err != nil {
 		return fmt.Errorf("update gallery: %w", err)
 	}
