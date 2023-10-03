@@ -16,6 +16,7 @@ var (
 
 	// galleries
 	ErrResourceNotFound = errors.New("models: resource not found")
+	ErrImageNotFound    = errors.New("models: image is not found")
 )
 
 func isSqlUniqueViolation(err error) bool {

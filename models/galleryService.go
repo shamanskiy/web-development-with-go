@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -27,9 +29,8 @@ type GalleryService struct {
 }
 
 type Image struct {
-	GalleryID int
-	Path      string
-	Filename  string
+	Path     string
+	Filename string
 }
 
 func (gs *GalleryService) Create(userId int, title string) (*Gallery, error) {
@@ -130,13 +131,29 @@ func (service *GalleryService) Images(galleryID int) ([]Image, error) {
 	for _, filePath := range allFiles {
 		if hasExtension(filePath, supportedExtensions) {
 			images = append(images, Image{
-				Path:      filePath,
-				GalleryID: galleryID,
-				Filename:  filepath.Base(filePath)})
+				Path:     filePath,
+				Filename: filepath.Base(filePath)})
 		}
 	}
 
 	return images, nil
+}
+
+func (service *GalleryService) Image(galleryID int, filename string) (Image, error) {
+	imagePath := filepath.Join(service.galleryDir(galleryID), filename)
+
+	_, err := os.Stat(imagePath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return Image{}, ErrImageNotFound
+		}
+		return Image{}, fmt.Errorf("querying for image: %w", err)
+	}
+
+	return Image{
+		Filename: filename,
+		Path:     imagePath,
+	}, nil
 }
 
 func (service GalleryService) galleryDir(galleryID int) string {
