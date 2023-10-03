@@ -4,7 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 )
+
+var supportedExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
 
 type Gallery struct {
 	ID        int
@@ -15,6 +19,17 @@ type Gallery struct {
 
 type GalleryService struct {
 	DB *sql.DB
+
+	// ImagesDir is used to tell the GalleryService where to store and locate
+	// images. If not set, the GalleryService will default to using the "images"
+	// directory.
+	ImagesDir string
+}
+
+type Image struct {
+	GalleryID int
+	Path      string
+	Filename  string
 }
 
 func (gs *GalleryService) Create(userId int, title string) (*Gallery, error) {
@@ -102,4 +117,43 @@ func (gs *GalleryService) Delete(gallery Gallery) error {
 		return fmt.Errorf("delete gallery: %w", err)
 	}
 	return nil
+}
+
+func (service *GalleryService) Images(galleryID int) ([]Image, error) {
+	globPattern := filepath.Join(service.galleryDir(galleryID), "*")
+	allFiles, err := filepath.Glob(globPattern)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving gallery images: %w", err)
+	}
+
+	var images []Image
+	for _, filePath := range allFiles {
+		if hasExtension(filePath, supportedExtensions) {
+			images = append(images, Image{
+				Path:      filePath,
+				GalleryID: galleryID,
+				Filename:  filepath.Base(filePath)})
+		}
+	}
+
+	return images, nil
+}
+
+func (service GalleryService) galleryDir(galleryID int) string {
+	imagesDir := service.ImagesDir
+	if imagesDir == "" {
+		imagesDir = "images"
+	}
+	return filepath.Join(imagesDir, fmt.Sprintf("gallery-%d", galleryID))
+}
+
+func hasExtension(file string, extensions []string) bool {
+	for _, ext := range extensions {
+		file = strings.ToLower(file)
+		ext = strings.ToLower(ext)
+		if filepath.Ext(file) == ext {
+			return true
+		}
+	}
+	return false
 }

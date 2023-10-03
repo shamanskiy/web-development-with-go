@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -117,6 +118,7 @@ func main() {
 	// this redirects logged-out users to the sign-in page
 	router.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleriesController.ViewGalleryHandler)
+		r.Get("/{id}/images/{filename}", galleriesController.ImageHandler)
 		r.Group(func(r chi.Router) {
 			r.Use(userMiddleware.RequireUser)
 			r.Get("/new-gallery", galleriesController.NewGalleryFormHandler)
@@ -133,7 +135,8 @@ func main() {
 	router.Get("/contact", controllers.Static(contactTemplate))
 	router.NotFound(controllers.NotFound(notFoundTemplate))
 
-	fmt.Printf("Starting a server on %s...\n", cfg.Server.Address)
+	fmt.Printf("Listening on http://localhost%s\n", cfg.Server.Address)
+	fmt.Printf("Listening on http://%s%s\n", localIpAddress(), cfg.Server.Address)
 	http.ListenAndServe(cfg.Server.Address, router)
 }
 
@@ -176,4 +179,30 @@ func loadEnvConfig() (config, error) {
 	cfg.Server.Address = ":3000"
 
 	return cfg, nil
+}
+
+func localIpAddress() string {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, i := range interfaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			panic(err)
+		}
+
+		for _, addr := range addrs {
+			ipnet, ok := addr.(*net.IPNet)
+			if !ok || ipnet.IP.IsLoopback() {
+				continue
+			}
+
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	panic("failed to find local ipv4 address")
 }

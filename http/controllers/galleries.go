@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"sort"
 	"strconv"
@@ -101,23 +100,16 @@ func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data struct {
-		ID     int
 		Title  string
-		Images []string
+		Images []models.Image
 	}
-	data.ID = gallery.ID
 	data.Title = gallery.Title
-	// We are going to psuedo-randomly come up with 20 images to render for our
-	// gallery until we actually support uploading images. These images will use
-	// placekitten.com, which gives us cat images.
-	for i := 0; i < 20; i++ {
-		// width and height are random values betwee 200 and 700
-		w, h := rand.Intn(500)+200, rand.Intn(500)+200
-		// using the width and height, we generate a URL
-		catImageURL := fmt.Sprintf("https://placekitten.com/%d/%d", w, h)
-		// Then we add the URL to our images.
-		data.Images = append(data.Images, catImageURL)
+	data.Images, err = g.GalleryService.Images(gallery.ID)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
 	}
+
 	g.Templates.ViewGallery.Execute(w, r, data)
 }
 
@@ -132,6 +124,36 @@ func (g Galleries) DeleteGalleryHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	http.Redirect(w, r, "/galleries", http.StatusFound)
+}
+
+func (g Galleries) ImageHandler(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnPrivateGallery)
+	if err != nil {
+		return
+	}
+	filename := chi.URLParam(r, "filename")
+
+	images, err := g.GalleryService.Images(gallery.ID)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	var requestedImage models.Image
+	imageFound := false
+	for _, image := range images {
+		if image.Filename == filename {
+			requestedImage = image
+			imageFound = true
+			break
+		}
+	}
+
+	if !imageFound {
+		http.Error(w, "Image not found", http.StatusNotFound)
+		return
+	}
+	http.ServeFile(w, r, requestedImage.Path)
 }
 
 type galleryOpt func(http.ResponseWriter, *http.Request, *models.Gallery) error
