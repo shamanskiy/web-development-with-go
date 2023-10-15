@@ -174,3 +174,15 @@ func hasExtension(file string, extensions []string) bool {
 	}
 	return false
 }
+
+func (service *GalleryService) DeleteImage(galleryID int, filename string) error {
+	image, err := service.Image(galleryID, filename)
+	if err != nil {
+		return fmt.Errorf("deleting image: %w", err)
+	}
+	err = os.Remove(image.Path)
+	if err != nil {
+		return fmt.Errorf("deleting image: %w", err)
+	}
+	return nil
+}

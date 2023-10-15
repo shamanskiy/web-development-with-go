@@ -127,6 +127,7 @@ func main() {
 			r.Get("/{id}/edit", galleriesController.EditGalleryFormHandler)
 			r.Post("/{id}/edit", galleriesController.EditGalleryHandler)
 			r.Post("/{id}/delete", galleriesController.DeleteGalleryHandler)
+			r.Post("/{id}/images/{filename}/delete", galleriesController.DeleteImageHandler)
 		})
 	})
 

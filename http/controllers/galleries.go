@@ -53,7 +53,29 @@ func (g Galleries) EditGalleryFormHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	g.Templates.EditGallery.Execute(w, r, gallery)
+	var data struct {
+		ID        int
+		Title     string
+		Published bool
+		Images    []imageData
+	}
+	data.ID = gallery.ID
+	data.Title = gallery.Title
+	data.Published = gallery.Published
+
+	images, err := g.GalleryService.Images(gallery.ID)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	for _, image := range images {
+		data.Images = append(data.Images, imageData{
+			GalleryID:       gallery.ID,
+			FilenameEscaped: url.PathEscape(image.Filename),
+		})
+	}
+
+	g.Templates.EditGallery.Execute(w, r, data)
 }
 
 func (g Galleries) EditGalleryHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,13 +122,9 @@ func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type image struct {
-		GalleryID       int
-		FilenameEscaped string
-	}
 	var data struct {
 		Title  string
-		Images []image
+		Images []imageData
 	}
 	data.Title = gallery.Title
 
@@ -116,7 +134,7 @@ func (g Galleries) ViewGalleryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, img := range images {
-		data.Images = append(data.Images, image{
+		data.Images = append(data.Images, imageData{
 			GalleryID:       gallery.ID,
 			FilenameEscaped: url.PathEscape(img.Filename),
 		})
@@ -156,6 +174,21 @@ func (g Galleries) ImageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.ServeFile(w, r, image.Path)
+}
+
+func (g Galleries) DeleteImageHandler(w http.ResponseWriter, r *http.Request) {
+	filename := chi.URLParam(r, "filename")
+	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
+	if err != nil {
+		return
+	}
+	err = g.GalleryService.DeleteImage(gallery.ID, filename)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editPath, http.StatusFound)
 }
 
 type galleryOpt func(http.ResponseWriter, *http.Request, *models.Gallery) error
@@ -207,5 +240,9 @@ func userMustOwnPrivateGallery(w http.ResponseWriter, r *http.Request, gallery *
 	}
 
 	return nil
+}
 
+type imageData struct {
+	GalleryID       int
+	FilenameEscaped string
 }
