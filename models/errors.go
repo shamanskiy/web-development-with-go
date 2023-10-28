@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
@@ -18,6 +19,14 @@ var (
 	ErrResourceNotFound = errors.New("models: resource not found")
 	ErrImageNotFound    = errors.New("models: image is not found")
 )
+
+type FileError struct {
+	Issue string
+}
+
+func (fe FileError) Error() string {
+	return fmt.Sprintf("invalid file: %v", fe.Issue)
+}
 
 func isSqlUniqueViolation(err error) bool {
 	var pgError *pgconn.PgError

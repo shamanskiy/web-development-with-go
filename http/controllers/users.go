@@ -57,7 +57,7 @@ func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cookie.Set(w, cookie.CookieSession, session.Token)
 
-	http.Redirect(w, r, "/users/me", http.StatusFound)
+	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
 func (u Users) SignInFormHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +91,7 @@ func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cookie.Set(w, cookie.CookieSession, session.Token)
 
-	http.Redirect(w, r, "/users/me", http.StatusFound)
+	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
 // This handler expects to sit behind userMiddleware.RequireUser,
@@ -191,7 +191,7 @@ func (u Users) NewPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie.Set(w, cookie.CookieSession, session.Token)
-	http.Redirect(w, r, "/users/me", http.StatusFound)
+	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
 type EmailData struct {

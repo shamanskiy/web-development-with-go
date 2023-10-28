@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 var supportedExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
+
+var supporterMimeTypes = []string{"image/png", "image/jpeg", "image/gif"}
 
 type Gallery struct {
 	ID        int
@@ -118,6 +121,10 @@ func (gs *GalleryService) Delete(gallery Gallery) error {
 	if err != nil {
 		return fmt.Errorf("delete gallery: %w", err)
 	}
+	err = os.RemoveAll(gs.galleryDir(gallery.ID))
+	if err != nil {
+		return fmt.Errorf("delete gallery images: %w", err)
+	}
 	return nil
 }
 
@@ -188,9 +195,17 @@ func (service *GalleryService) DeleteImage(galleryID int, filename string) error
 	return nil
 }
 
-func (service *GalleryService) CreateImage(galleryID int, filename string, contents io.Reader) error {
+func (service *GalleryService) CreateImage(galleryID int, filename string, contents io.ReadSeeker) error {
+	err := checkContentType(contents, supporterMimeTypes)
+	if err != nil {
+		return fmt.Errorf("creating image %v: %w", filename, err)
+	}
+	if !hasExtension(filename, supportedExtensions) {
+		return fmt.Errorf("creating image %v: %w", filename, err)
+	}
+
 	galleryDir := service.galleryDir(galleryID)
-	err := os.MkdirAll(galleryDir, 0755)
+	err = os.MkdirAll(galleryDir, 0755)
 	if err != nil {
 		return fmt.Errorf("creating gallery-%d images directory: %w", galleryID, err)
 	}
@@ -204,6 +219,38 @@ func (service *GalleryService) CreateImage(galleryID int, filename string, conte
 	_, err = io.Copy(dst, contents)
 	if err != nil {
 		return fmt.Errorf("copying contents to image: %w", err)
+	}
+	return nil
+}
+
+func checkContentType(r io.ReadSeeker, allowedTypes []string) error {
+	testBytes := make([]byte, 512)
+	_, err := r.Read(testBytes)
+	if err != nil {
+		return fmt.Errorf("checking content type: %w", err)
+	}
+
+	_, err = r.Seek(0, 0)
+	if err != nil {
+		return fmt.Errorf("checking content type: %w", err)
+	}
+
+	contentType := http.DetectContentType(testBytes)
+	for _, t := range allowedTypes {
+		if contentType == t {
+			return nil
+		}
+	}
+	return FileError{
+		Issue: fmt.Sprintf("invalid content type: %v", contentType),
+	}
+}
+
+func checkExtension(filename string, allowedExtensions []string) error {
+	if !hasExtension(filename, allowedExtensions) {
+		return FileError{
+			Issue: fmt.Sprintf("invalid extension: %v", filepath.Ext(filename)),
+		}
 	}
 	return nil
 }
