@@ -128,6 +128,7 @@ func main() {
 			r.Post("/{id}/edit", galleriesController.EditGalleryHandler)
 			r.Post("/{id}/delete", galleriesController.DeleteGalleryHandler)
 			r.Post("/{id}/images/{filename}/delete", galleriesController.DeleteImageHandler)
+			r.Post("/{id}/images", galleriesController.UploadImageHandler)
 		})
 	})
 

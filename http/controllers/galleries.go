@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"sort"
 	"strconv"
 
@@ -161,7 +162,7 @@ func (g Galleries) ImageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	filename := chi.URLParam(r, "filename")
+	filename := g.filename(r)
 
 	image, err := g.GalleryService.Image(gallery.ID, filename)
 	if err != nil {
@@ -177,7 +178,7 @@ func (g Galleries) ImageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g Galleries) DeleteImageHandler(w http.ResponseWriter, r *http.Request) {
-	filename := chi.URLParam(r, "filename")
+	filename := g.filename(r)
 	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
 	if err != nil {
 		return
@@ -187,6 +188,40 @@ func (g Galleries) DeleteImageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
+	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editPath, http.StatusFound)
+}
+
+func (g Galleries) UploadImageHandler(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnGallery)
+	if err != nil {
+		return
+	}
+
+	err = r.ParseMultipartForm(5 << 20) // 5mb
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	fileHeaders := r.MultipartForm.File["images"]
+	for _, fileHeader := range fileHeaders {
+		file, err := fileHeader.Open()
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		fmt.Printf("Attempting to upload %v for gallery %d.\n",
+			fileHeader.Filename, gallery.ID)
+
+		err = g.GalleryService.CreateImage(gallery.ID, fileHeader.Filename, file)
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
 	http.Redirect(w, r, editPath, http.StatusFound)
 }
@@ -240,6 +275,12 @@ func userMustOwnPrivateGallery(w http.ResponseWriter, r *http.Request, gallery *
 	}
 
 	return nil
+}
+
+func (g Galleries) filename(r *http.Request) string {
+	filename := chi.URLParam(r, "filename")
+	filename = filepath.Base(filename)
+	return filename
 }
 
 type imageData struct {
