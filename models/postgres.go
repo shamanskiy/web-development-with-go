@@ -23,17 +23,6 @@ func (pc PostgresConfig) String() string {
 		pc.Host, pc.Port, pc.User, pc.Password, pc.Database, pc.SSLMode)
 }
 
-func DefaultPostgresConfig() PostgresConfig {
-	return PostgresConfig{
-		Host:     "localhost",
-		Port:     "5432",
-		User:     "baloo",
-		Password: "junglebook",
-		Database: "lenslocked",
-		SSLMode:  "disable",
-	}
-}
-
 func Migrate(db *sql.DB, dir string) error {
 	err := goose.SetDialect("postgres")
 	if err != nil {
