@@ -137,6 +137,9 @@ func main() {
 	router.Get("/contact", controllers.Static(contactTemplate))
 	router.NotFound(controllers.NotFound(notFoundTemplate))
 
+	assetsHandler := http.FileServer(http.Dir("assets"))
+	router.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
+
 	fmt.Printf("Listening on http://localhost%s\n", cfg.Server.Address)
 	fmt.Printf("Listening on http://%s%s\n", localIpAddress(), cfg.Server.Address)
 	http.ListenAndServe(cfg.Server.Address, router)
