@@ -1,0 +1,44 @@
+version: "3"
+
+tasks:
+  test:
+    desc: "run linters and tests"
+    cmds:
+      - go vet ./...
+      - staticcheck ./...
+
+  dev-up:
+    desc: "start the dev version of app locally with a Docker postgres image"
+    aliases: [dev]
+    cmds:
+      - docker compose up -d
+      - defer: docker compose stop
+      # sleeping gives docker compose time to spin up the postgres container in case it doesn't exist
+      - sleep 0.35
+      - go run main.go
+
+  dev-stop:
+    desc: "stop dev containers without removing them"
+    cmds:
+      - docker compose stop
+
+  dev-down:
+    desc: "stop and remove dev containers"
+    cmds:
+      - docker compose down
+
+  docker-clean:
+    desc: "remove all stopped containers and clean the build cache"
+    cmds:
+      - docker system prune
+
+  prod-up:
+    desc: "start the containerized/prod version of app"
+    aliases: [prod]
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose.production.yml up --build
+
+  prod-down:
+    desc: "remove all containers created by prod-up"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose.production.yml down

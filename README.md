@@ -51,3 +51,9 @@ Fill in .env.template file using your credentials from https://mailtrap.io
 and put .env in the project root.
 
 Icons https://heroicons.com
+
+Run production docker compose:
+
+```
+docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+```

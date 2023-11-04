@@ -23,7 +23,8 @@ func loadEnvConfig() (server.Config, error) {
 	var cfg server.Config
 
 	// read .env file and set env variables
-	err := godotenv.Load()
+	envFile := getEnvFilename()
+	err := godotenv.Load(envFile)
 	if err != nil {
 		return cfg, err
 	}
@@ -55,4 +56,16 @@ func loadEnvConfig() (server.Config, error) {
 	cfg.Server.Address = os.Getenv("SERVER_ADDRESS")
 
 	return cfg, nil
+}
+
+func getEnvFilename() string {
+	env := os.Getenv("LENSLOCKED_ENV")
+	switch env {
+	case "PROD":
+		return ".env-prod"
+	case "":
+		return ".env"
+	default:
+		panic("unknown environment:" + env)
+	}
 }

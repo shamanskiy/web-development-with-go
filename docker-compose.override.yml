@@ -7,12 +7,3 @@ services:
     ports:
       # We expose the DB ports so that apps not running via docker-compose can connect to the DB.
       - 5432:5432
-
-  # Adminer provides a nice little web UI to connect to databases
-  adminer:
-    image: adminer
-    restart: always
-    environment:
-      ADMINER_DESIGN: dracula
-    ports:
-      - 3333:8080
