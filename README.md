@@ -1,59 +1,46 @@
-To build and run web app:
+# Lenslocked - online image gallery
+
+This is a realistic web application to developed while following the awesome course ["Web Development with Go"](https://courses.calhoun.io/courses/cor_wdv2) by Jon Calhoun. The app demonstrates how to:
+
+- develop http server with Go
+- implement server-side rendering using Go templates
+- run a Postgres DB via Docker
+- use goose to version the DB
+- implement user authentication (password hashing, sessions, CSRF)
+- implement password recovery via email
+- upload, check, store and display images (PNG, JPEG, GIF)
+- containerize and deploy the application
+
+## Local dev setup
+
+Prerequisites:
+
+- install [Task](https://taskfile.dev/installation/) - a build system used by this project
+- install Docker
+- create and fill .env file using .env.template
+
+To run the app locally using a Docker postgres image, run:
 
 ```
-go run main.go
+task dev
 ```
 
-To start Postgres image:
+To run the app fully containerized, run:
 
 ```
-docker compose up
+task prod
 ```
 
-To start Postgres image in detached mode:
+To run the linters and tests, run:
 
 ```
-docker compose up -d
+task test
 ```
 
-To stop Postgres image use Ctrl+C or for detached mode:
+Run `task -l` to list other available tasks.
 
-```
-docker compose stop
-```
+## Notes
 
-To stop and kill Postgres image use
+Email server provider: https://mailtrap.io
 
-```
-DON'T USE IT UNLESS YOU HAVE TO!
-docker compose down
-```
-
-To connect to DB with pgsl CLI in Docker:
-
-```
-docker exec -it web-development-with-go-db-1 /usr/bin/psql -U baloo -d lenslocked
-```
-
-To run goose migration (up/down/status/reset)
-
-```
-goose postgres \
-"host=localhost port=5432 user=baloo password=junglebook dbname=lenslocked sslmode=disable" \
-status
-```
-
-```
-goose fix
-```
-
-Fill in .env.template file using your credentials from https://mailtrap.io
-and put .env in the project root.
-
-Icons https://heroicons.com
-
-Run production docker compose:
-
-```
-docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
-```
+Icons: https://heroicons.com

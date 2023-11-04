@@ -3,6 +3,7 @@ version: "3"
 tasks:
   test:
     desc: "run linters and tests"
+    aliases: [t]
     cmds:
       - go vet ./...
       - staticcheck ./...
@@ -42,3 +43,17 @@ tasks:
     desc: "remove all containers created by prod-up"
     cmds:
       - docker compose -f docker-compose.yml -f docker-compose.production.yml down
+
+  build-tailwind:
+    desc: "build a minimal CSS file with only necessary tailwind classes"
+    dir: tailwind
+    aliases: [tailwind]
+    cmds:
+      - npx tailwindcss -i ./styles.css -o ../src/assets/styles.css
+
+  connect-to-db:
+    desc: "connect to the running postgres docker container in interactive mode"
+    aliases: [db]
+    cmds:
+      - docker compose up -d
+      - docker exec -it web-development-with-go-db-1 /usr/bin/psql -U baloo -d lenslocked
