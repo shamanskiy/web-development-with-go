@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${PSQL_PASSWORD}
       POSTGRES_DB: ${PSQL_DATABASE}
 
-  server:
+  app:
     build:
       context: ./
       dockerfile: Dockerfile

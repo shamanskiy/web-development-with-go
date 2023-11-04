@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/Shamanskiy/lenslocked/src/assets"
@@ -146,32 +145,5 @@ func Run(cfg Config) {
 	router.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
 
 	fmt.Printf("Listening on http://localhost%s\n", cfg.Server.Address)
-	fmt.Printf("Listening on http://%s%s\n", localIpAddress(), cfg.Server.Address)
 	http.ListenAndServe(cfg.Server.Address, router)
-}
-
-func localIpAddress() string {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		panic(err)
-	}
-
-	for _, i := range interfaces {
-		addrs, err := i.Addrs()
-		if err != nil {
-			panic(err)
-		}
-
-		for _, addr := range addrs {
-			ipnet, ok := addr.(*net.IPNet)
-			if !ok || ipnet.IP.IsLoopback() {
-				continue
-			}
-
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
-			}
-		}
-	}
-	panic("failed to find local ipv4 address")
 }
