@@ -3,7 +3,7 @@ package context
 import (
 	"context"
 
-	"github.com/Shamanskiy/lenslocked/models"
+	"github.com/Shamanskiy/lenslocked/src/models"
 )
 
 type key string

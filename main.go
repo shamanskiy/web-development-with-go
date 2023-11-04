@@ -5,8 +5,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Shamanskiy/lenslocked/http/server"
-	"github.com/Shamanskiy/lenslocked/models"
+	"github.com/Shamanskiy/lenslocked/src/http/server"
+	"github.com/Shamanskiy/lenslocked/src/models"
 	"github.com/joho/godotenv"
 )
 

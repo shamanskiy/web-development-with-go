@@ -3,9 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/Shamanskiy/lenslocked/http/context"
-	"github.com/Shamanskiy/lenslocked/http/cookie"
-	"github.com/Shamanskiy/lenslocked/models"
+	"github.com/Shamanskiy/lenslocked/src/http/context"
+	"github.com/Shamanskiy/lenslocked/src/http/cookie"
+	"github.com/Shamanskiy/lenslocked/src/models"
 )
 
 type UserMiddleware struct {

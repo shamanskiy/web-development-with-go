@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/Shamanskiy/lenslocked/http/context"
-	"github.com/Shamanskiy/lenslocked/models"
+	"github.com/Shamanskiy/lenslocked/src/http/context"
+	"github.com/Shamanskiy/lenslocked/src/models"
 	"github.com/gorilla/csrf"
 )
 

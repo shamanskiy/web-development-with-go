@@ -5,4 +5,4 @@ npx tailwindcss init
 
 # rebuild static Tailwind CSS with
 
-npx tailwindcss -i ./styles.css -o ../assets/styles.css --watch
+npx tailwindcss -i ./styles.css -o ../src/assets/styles.css --watch

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -8,9 +9,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/Shamanskiy/lenslocked/errors"
-	"github.com/Shamanskiy/lenslocked/http/context"
-	"github.com/Shamanskiy/lenslocked/models"
+	"github.com/Shamanskiy/lenslocked/src/http/context"
+	"github.com/Shamanskiy/lenslocked/src/models"
 	"github.com/go-chi/chi/v5"
 )
 

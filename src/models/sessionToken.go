@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/Shamanskiy/lenslocked/rand"
+	"github.com/Shamanskiy/lenslocked/src/rand"
 )
 
 const (

@@ -5,12 +5,13 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/Shamanskiy/lenslocked/http/controllers"
-	"github.com/Shamanskiy/lenslocked/http/middleware"
-	"github.com/Shamanskiy/lenslocked/migrations"
-	"github.com/Shamanskiy/lenslocked/models"
-	"github.com/Shamanskiy/lenslocked/templates"
-	"github.com/Shamanskiy/lenslocked/views"
+	"github.com/Shamanskiy/lenslocked/src/assets"
+	"github.com/Shamanskiy/lenslocked/src/http/controllers"
+	"github.com/Shamanskiy/lenslocked/src/http/middleware"
+	"github.com/Shamanskiy/lenslocked/src/migrations"
+	"github.com/Shamanskiy/lenslocked/src/models"
+	"github.com/Shamanskiy/lenslocked/src/templates"
+	"github.com/Shamanskiy/lenslocked/src/views"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -141,7 +142,7 @@ func Run(cfg Config) {
 	router.Get("/contact", controllers.Static(contactTemplate))
 	router.NotFound(controllers.NotFound(notFoundTemplate))
 
-	assetsHandler := http.FileServer(http.Dir("assets"))
+	assetsHandler := http.FileServer(http.FS(assets.FS))
 	router.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
 
 	fmt.Printf("Listening on http://localhost%s\n", cfg.Server.Address)

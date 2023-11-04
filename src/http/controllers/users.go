@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Shamanskiy/lenslocked/errors"
-	"github.com/Shamanskiy/lenslocked/http/context"
-	"github.com/Shamanskiy/lenslocked/http/cookie"
-	"github.com/Shamanskiy/lenslocked/models"
+	"github.com/Shamanskiy/lenslocked/src/errors"
+	"github.com/Shamanskiy/lenslocked/src/http/context"
+	"github.com/Shamanskiy/lenslocked/src/http/cookie"
+	"github.com/Shamanskiy/lenslocked/src/models"
 )
 
 type Users struct {
