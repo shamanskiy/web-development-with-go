@@ -1,6 +1,8 @@
 # Lenslocked - online image gallery
 
-This is a realistic web application to developed while following the awesome course ["Web Development with Go"](https://courses.calhoun.io/courses/cor_wdv2) by Jon Calhoun. The app demonstrates how to:
+This is a realistic web application to developed while following the awesome course ["Web Development with Go"](https://courses.calhoun.io/courses/cor_wdv2) by Jon Calhoun. The app is currently hosted with a free-tier account on render.com at https://lenslocked.onrender.com.
+
+The app demonstrates how to:
 
 - develop http server with Go
 - implement server-side rendering using Go templates

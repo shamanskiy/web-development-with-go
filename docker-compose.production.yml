@@ -1,11 +1,10 @@
-# docker compose configuration for production environment
+# docker compose configuration for a fully contanerized build
 version: "3.9"
 
 services:
   db:
     image: postgres
     restart: always
-    # envvars are read from the .env file
     environment:
       POSTGRES_USER: ${PSQL_USER}
       POSTGRES_PASSWORD: ${PSQL_PASSWORD}
