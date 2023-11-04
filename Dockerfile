@@ -2,7 +2,7 @@ FROM golang
 
 WORKDIR /app
 
-COPY .env-prod .
+COPY .env.production .
 ENV LENSLOCKED_ENV PROD
 
 # install go dependencies separately from source code

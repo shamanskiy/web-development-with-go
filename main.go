@@ -62,7 +62,7 @@ func getEnvFilename() string {
 	env := os.Getenv("LENSLOCKED_ENV")
 	switch env {
 	case "PROD":
-		return ".env-prod"
+		return ".env.production"
 	case "":
 		return ".env"
 	default:

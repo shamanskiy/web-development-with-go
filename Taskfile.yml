@@ -37,7 +37,11 @@ tasks:
     desc: "start the containerized/prod version of app"
     aliases: [prod]
     cmds:
-      - docker compose -f docker-compose.production.yml up --build
+      # --build rebuilds the app image each time to ensure the latest src code is used
+      - docker compose
+        -f docker-compose.production.yml
+        --env-file .env.production
+        up --build
 
   prod-down:
     desc: "remove all containers created by prod-up"

@@ -1,3 +1,4 @@
+# docker compose configuration for production environment
 version: "3.9"
 
 services:
