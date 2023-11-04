@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - ./images:/app/images
+      - ./images:/images
     ports:
       - 3000:3000
     depends_on:
