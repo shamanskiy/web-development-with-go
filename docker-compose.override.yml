@@ -1,9 +1,0 @@
-# override defines changes to services and new services that we want to use in development.
-version: "3.9"
-
-services:
-  # All settings from the base docker-compose.yml will be used and we can change or add new ones here.
-  db:
-    ports:
-      # We expose the DB ports so that apps not running via docker-compose can connect to the DB.
-      - 5432:5432

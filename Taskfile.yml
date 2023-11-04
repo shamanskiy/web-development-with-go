@@ -37,12 +37,12 @@ tasks:
     desc: "start the containerized/prod version of app"
     aliases: [prod]
     cmds:
-      - docker compose -f docker-compose.yml -f docker-compose.production.yml up --build
+      - docker compose -f docker-compose.production.yml up --build
 
   prod-down:
     desc: "remove all containers created by prod-up"
     cmds:
-      - docker compose -f docker-compose.yml -f docker-compose.production.yml down
+      - docker compose -f docker-compose.production.yml down
 
   build-tailwind:
     desc: "build a minimal CSS file with only necessary tailwind classes"

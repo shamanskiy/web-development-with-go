@@ -6,6 +6,8 @@ services:
     image: postgres
     restart: always
     # envvars are read from the .env file
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: ${PSQL_USER}
       POSTGRES_PASSWORD: ${PSQL_PASSWORD}
